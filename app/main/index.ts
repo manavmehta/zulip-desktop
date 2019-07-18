@@ -1,3 +1,23 @@
+'use strict';
+import { sentryInit } from '../renderer/js/utils/sentry-util';
+import { appUpdater } from './autoupdater';
+import { setAutoLaunch } from './startup';
+
+import windowStateKeeper = require('electron-window-state');
+import path = require('path');
+import fs = require('fs');
+import isDev = require('electron-is-dev');
+import electron = require('electron');
+const { app, ipcMain, session } = electron;
+
+import AppMenu = require('./menu');
+import BadgeSettings = require('../renderer/js/pages/preference/badge-settings');
+import ConfigUtil = require('../renderer/js/utils/config-util');
+import ProxyUtil = require('../renderer/js/utils/proxy-util');
+
+interface PatchedGlobal extends NodeJS.Global {
+	mainWindowState: windowStateKeeper.State;
+}
 
 import electron, {app, dialog, ipcMain, session} from 'electron';
 import fs from 'fs';
@@ -8,6 +28,7 @@ import windowStateKeeper from 'electron-window-state';
 import * as BadgeSettings from '../renderer/js/pages/preference/badge-settings';
 import * as ConfigUtil from '../renderer/js/utils/config-util';
 import * as ProxyUtil from '../renderer/js/utils/proxy-util';
+import ViewManager from './viewmanager';
 import {sentryInit} from '../renderer/js/utils/sentry-util';
 
 import {appUpdater} from './autoupdater';
@@ -283,6 +304,10 @@ ${error}`
 		page.send('toggle-autohide-menubar', showMenubar, true);
 	});
 
+	ipcMain.on('toggle-sidebar', () => {
+		ViewManager.fixBounds();
+	});
+
 	ipcMain.on('update-badge', (_event: Electron.IpcMainEvent, messageCount: number) => {
 		badgeCount = messageCount;
 		BadgeSettings.updateBadge(badgeCount, mainWindow);
@@ -301,7 +326,7 @@ ${error}`
 		AppMenu.setMenu(props);
 		const activeTab = props.tabs[props.activeTabIndex];
 		if (activeTab) {
-			mainWindow.setTitle(`Zulip - ${activeTab.webviewName}`);
+			mainWindow.setTitle(`Zulip - ${activeTab.props.name}`);
 		}
 	});
 
