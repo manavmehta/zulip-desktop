@@ -49,7 +49,7 @@ export default function handleExternalLink(this: WebView, event: Electron.NewWin
 						body: 'Download failed'
 					});
 				} else {
-					this.$el.downloadURL(url.href);
+					ipcRenderer.send('call-specific-view-function', index, 'downloadUrl', url.href);
 				}
 			}
 

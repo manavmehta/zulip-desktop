@@ -83,7 +83,7 @@ export default class WebView extends BaseComponent {
 
 	registerListeners(): void {
 		this.$el.addEventListener('new-window', event => {
-			handleExternalLink.call(this, event);
+			// handleExternalLink.call(this, event);
 		});
 
 		if (shouldSilentWebview) {

@@ -971,6 +971,10 @@ class ServerManagerView {
 			this.badgeCounts[url] = count;
 			this.updateBadge();
 		});
+
+		ipcRenderer.on('handle-link', (e: Event, index: number, url: string) => {
+			handleExternalLink(index, url);
+		});
 	}
 }
 
