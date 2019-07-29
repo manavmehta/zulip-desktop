@@ -62,13 +62,17 @@ export class View extends BrowserView {
 			this.sendAction('switch-loading', false, this.url);
 		});
 
+		this.webContents.addListener('did-finish-load', () => {
+			const title = this.webContents.getTitle();
+			this.updateBadgeCount(title);
+		});
+
 		this.webContents.addListener('did-stop-loading', () => {
 			this.switchLoadingIndicator(false);
 		});
 
 		this.webContents.addListener('page-title-updated', (e: Event, title: string) => {
-			const badgeCount = this.getBadgeCount(title);
-			this.sendAction('update-badge-count', badgeCount, this.url);
+			this.updateBadgeCount(title);
 		});
 
 		this.webContents.addListener('page-favicon-updated', (e: Event, favicons: string[]) => {
@@ -160,6 +164,11 @@ export class View extends BrowserView {
 
 	loadUrl(url: string): void {
 		this.webContents.loadURL(url);
+	}
+
+	updateBadgeCount(title: string): void {
+		const badgeCount = this.getBadgeCount(title);
+		this.sendAction('update-badge-count', badgeCount, this.url);
 	}
 
 	sendAction(action: any, ...params: any[]): void {
