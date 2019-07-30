@@ -1,7 +1,9 @@
 'use strict';
 
-import { BrowserView, BrowserWindow, app } from 'electron';
+import { BrowserView, BrowserWindow, app, dialog } from 'electron';
 
+import path = require('path');
+import fs = require('fs');
 import ConfigUtil = require('../renderer/js/utils/config-util');
 const shouldSilentWebview = ConfigUtil.getConfigItem('silent');
 
@@ -17,7 +19,7 @@ export class View extends BrowserView {
 	index: number;
 	url: string;
 	zoomFactor: number;
-	customCSS: boolean;
+	customCSS: string | null;
 
 	constructor(public props: ViewProps) {
 		super({
@@ -60,6 +62,7 @@ export class View extends BrowserView {
 
 		this.webContents.addListener('dom-ready', () => {
 			this.switchLoadingIndicator(false);
+			this.handleCSS();
 		});
 
 		this.webContents.addListener('did-fail-load', (e: Event, errorCode: number, errorDescription: string) => {
@@ -100,6 +103,25 @@ export class View extends BrowserView {
 			e.preventDefault();
 			this.sendAction('handle-link', this.index, urlToOpen);
 		});
+	}
+
+	handleCSS(): void {
+		// Injecting preload css in view to override some css rules
+		this.webContents.insertCSS(fs.readFileSync(path.join(__dirname, '../renderer/css/preload.css'), 'utf8'));
+
+		// get customCSS again from config util to avoid warning user again
+		this.customCSS = ConfigUtil.getConfigItem('customCSS');
+		if (this.customCSS) {
+			if (!fs.existsSync(this.customCSS)) {
+				this.customCSS = null;
+				ConfigUtil.setConfigItem('customCSS', null);
+				const errMsg = 'The custom css previously set is deleted!';
+				dialog.showErrorBox('custom css file deleted!', errMsg);
+				return;
+			}
+
+			this.webContents.insertCSS(fs.readFileSync(path.resolve(__dirname, this.customCSS), 'utf8'));
+		}
 	}
 
 	zoomIn(): void {
