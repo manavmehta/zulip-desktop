@@ -39,7 +39,8 @@ import {setAutoLaunch} from './startup';
 let mainWindowState: windowStateKeeper.State;
 
 // Prevent window being garbage collected
-let mainWindow: Electron.BrowserWindow;
+// eslint-disable-next-line import/no-mutable-exports
+export let mainWindow: Electron.BrowserWindow;
 let badgeCount: number;
 
 let isQuitting = false;
@@ -306,7 +307,7 @@ ${error}`
 	});
 
 	ipcMain.on('fix-bounds', () => {
-		ViewManager.fixBounds(mainWindow);
+		ViewManager.fixBounds();
 	});
 
 	ipcMain.on('update-badge', (_event: Electron.IpcMainEvent, messageCount: number) => {
