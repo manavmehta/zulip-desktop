@@ -485,10 +485,10 @@ class ServerManagerView {
 	}
 
 	openNetworkTroubleshooting(index: number): void {
-		const reconnectUtil = new ReconnectUtil(this.tabs[index].webview);
+		const reconnectUtil = new ReconnectUtil(this.tabs[index].props.url);
 		reconnectUtil.pollInternetAndReload();
-		this.tabs[index].webview.props.url = `file://${rendererDirectory}/network.html`;
-		this.tabs[index].showNetworkError();
+		const errorUrl = `file://${rendererDirectory}/network.html`;
+		ipcRenderer.send('switch-url', index, errorUrl);
 	}
 
 	activateLastTab(index: number): void {
@@ -617,7 +617,9 @@ class ServerManagerView {
 				tab.updateBadge(count);
 			}
 		}
-		ipcRenderer.send('update-badge', messageCountAll);
+		if (Number.isInteger(messageCountAll)) {
+			ipcRenderer.send('update-badge', messageCountAll);
+		}
 	}
 
 	updateGeneralSettings(setting: string, value: any): void {
@@ -645,8 +647,7 @@ class ServerManagerView {
 	}
 
 	isLoggedIn(tabIndex: number): boolean {
-		const url = this.tabs[tabIndex].webview.$el.src;
-		return !(url.endsWith('/login/') || this.tabs[tabIndex].webview.loading);
+		return true;
 	}
 
 	getActiveWebview(): Electron.WebviewTag {
@@ -686,7 +687,6 @@ class ServerManagerView {
 					click: () => {
 						// Switch to tab whose icon was right-clicked
 						this.activateTab(index);
-						this.tabs[index].webview.showNotificationSettings();
 					}
 				},
 				{
@@ -949,10 +949,6 @@ class ServerManagerView {
 
 		ipcRenderer.on('handle-link', (e: Event, index: number, url: string) => {
 			handleExternalLink(index, url);
-		});
-
-		ipcRenderer.on('network-error', () => {
-			this.openNetworkTroubleshooting();
 		});
 	}
 }

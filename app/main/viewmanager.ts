@@ -9,6 +9,7 @@ import ConfigUtil = require('../renderer/js/utils/config-util');
 class ViewManager {
 	views: { [key: number]: View };
 	selectedIndex: number;
+	domains: { [key: string]: string };
 
 	constructor() {
 		this.views = {};
@@ -33,6 +34,11 @@ class ViewManager {
 			this.destroyAll();
 		});
 
+		ipcMain.on('switch-url', (e: Event, index: number, url: string) => {
+			this.switchUrl(index, url);
+		});
+
+		// Sends a message to the selected View's webContents.
 		ipcMain.on('forward-view-message', (e: Event, name: string, ...params: any[]) => {
 			this.views[this.selectedIndex].webContents.send(name, ...params);
 		});
@@ -71,6 +77,12 @@ class ViewManager {
 		});
 	}
 
+	switchUrl(index: number, url: string): void {
+		const view = this.views[index];
+		view.webContents.loadURL(url);
+	}
+
+	// Creates a new View and appends it to this.views.
 	create(props: ViewProps): void {
 		if (this.views[props.index]) {
 			return;
