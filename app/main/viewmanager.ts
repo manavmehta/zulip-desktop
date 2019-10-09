@@ -34,6 +34,10 @@ class ViewManager {
 			this.destroyAll();
 		});
 
+		ipcMain.on('show-notification-settings', (e: Event, index: number) => {
+			this.showNotificationSettings(index);
+		});
+
 		ipcMain.on('switch-url', (e: Event, index: number, url: string) => {
 			this.switchUrl(index, url);
 		});
@@ -75,6 +79,10 @@ class ViewManager {
 				view.webContents.focus();
 			}
 		});
+	}
+
+	showNotificationSettings(index: number): void {
+		this.views[index].showNotificationSettings();
 	}
 
 	switchUrl(index: number, url: string): void {
