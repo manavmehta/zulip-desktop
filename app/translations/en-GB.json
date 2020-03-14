@@ -119,5 +119,6 @@
 	"File": "File",
 	"Network and Proxy Settings": "Network and Proxy Settings",
 	"Ask where to save files before downloading": "Ask where to save files before downloading",
-	"Force social login in app instead of browser (not recommended)": "Force social login in app instead of browser (not recommended)"
+	"Force social login in app instead of browser (not recommended)": "Force social login in app instead of browser (not recommended)",
+	"Force social login in app instead of browser": "Force social login in app instead of browser"
 }

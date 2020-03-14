@@ -21,3 +21,10 @@ interface ZulipWebWindow extends Window {
 	tray: any;
 	lightbox: any;
 }
+
+interface Domain {
+	icon: string;
+	url: string;
+	alias: string;
+	ignoreCerts: boolean;
+}
