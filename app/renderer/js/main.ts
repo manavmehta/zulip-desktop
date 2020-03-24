@@ -245,7 +245,7 @@ class ServerManagerView {
 	}
 
 	onEnd(): void {
-		const newServers: any = [];
+		const newServers: Domain[] = [];
 		const tabElements = document.querySelectorAll('#tabs-container .tab');
 		tabElements.forEach((el, index) => {
 			const oldIndex = Number(el.getAttribute('data-tab-id')) % this.servers.length;
@@ -253,11 +253,10 @@ class ServerManagerView {
 			// TODO: Change this to read data from in-memory store or DomainUtil.
 			/* eslint-disable unicorn/prefer-dataset */
 			el.setAttribute('data-tab-id', index.toString());
-			/* eslint-enable unicorn/prefer-dataset */
-		});
+			/* eslint-enable unicorn/prefer-dataset */		});
 		this.servers = newServers;
 		DomainUtil.batchUpdateDomain(this.servers);
-		this.reloadView();
+		this.reloadView(false);
 	}
 
 	initSidebar(): void {
@@ -338,8 +337,10 @@ class ServerManagerView {
 			this.servers = DomainUtil.getDomains();
 		}
 		if (this.servers.length > 0) {
-			for (const [i, server] of this.servers.entries()) {
-				this.initServer(server, i);
+			for (let i = 0; i < this.servers.length; i++) {
+				this.initServer(this.servers[i], i);
+				DomainUtil.updateSavedServer(this.servers[i].url, i);
+				this.activateTab(i);
 			}
 			// Open last active tab
 			let lastActiveTab = ConfigUtil.getConfigItem('lastActiveTab');
