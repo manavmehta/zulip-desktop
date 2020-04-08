@@ -65,6 +65,12 @@ electron_bridge.on('realm_icon_url', iconURL => {
 	ipcRenderer.send('realm-icon-changed', serverURL, iconURL);
 });
 
+electron_bridge.on('unread_pm_count', unreadPMs => {
+	const unreadPMCount = unreadPMs.unread_pm_count;
+	const realmUri = unreadPMs.realm_uri;
+	ipcRenderer.send('forward-message', 'unread-pm-count', unreadPMCount, realmUri);
+});
+
 // this follows node's idiomatic implementation of event
 // emitters to make event handling more simpler instead of using
 // functions zulip side will emit event using ElectronBrigde.send_event

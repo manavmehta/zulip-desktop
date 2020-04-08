@@ -63,6 +63,19 @@ export function shouldIgnoreCerts(url: string): boolean {
 	return null;
 }
 
+export function getIndex(url: string): number {
+	const domains = getDomains();
+	let index = 0;
+	for (const domain of domains) {
+		index++;
+		if (domain.url === url) {
+			return (index - 1);
+		}
+	}
+	// invalid index, use check in calling function
+	return -1;
+}
+
 function updateDomain(index: number, server: ServerConf): void {
 	reloadDB();
 	db.push(`/domains[${index}]`, server, true);
