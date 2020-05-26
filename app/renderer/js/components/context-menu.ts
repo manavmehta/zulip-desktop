@@ -29,15 +29,25 @@ export const contextMenu = (webview: WebView, event: any) => {
 			type: 'separator'
 		}, {
 			label: t.__('Cut'),
-			visible: isText,	//	Bug: visible and enabled are not working as expected
+			visible: isText,
 			enabled: props.isEditable,
-			role: 'cut'
+			accelerator: 'CommandOrControl+X',
+			click(_item){
+				webContents.cut();
+			}
 		}, {
 			label: t.__('Copy'),
-			role: 'copy'
+			accelerator: 'CommandOrControl+C',
+			click(_item){
+				webContents.copy();
+			}
 		}, {
-			label: t.__('Paste'),	// Bug : Pastes upon the selected _item
-			role: 'paste'
+			label: t.__('Paste'), // Bug: Paste replaces text
+			accelerator: 'CommandOrControl+V',
+			enabled: props.isEditable,
+			click(){
+				webContents.paste();
+			}
 		}, {
 			type: 'separator'
 		}, {
@@ -97,6 +107,6 @@ export const contextMenu = (webview: WebView, event: any) => {
 			}));
 		}
 	}
-
+	console.log(props.dictionarySuggestions);
 	menu.popup();
 };
