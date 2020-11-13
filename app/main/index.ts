@@ -1,24 +1,3 @@
-'use strict';
-import { sentryInit } from '../renderer/js/utils/sentry-util';
-import { appUpdater } from './autoupdater';
-import { setAutoLaunch } from './startup';
-
-import windowStateKeeper = require('electron-window-state');
-import path = require('path');
-import fs = require('fs');
-import isDev = require('electron-is-dev');
-import electron = require('electron');
-const { app, ipcMain, session } = electron;
-
-import AppMenu = require('./menu');
-import BadgeSettings = require('../renderer/js/pages/preference/badge-settings');
-import ConfigUtil = require('../renderer/js/utils/config-util');
-import ProxyUtil = require('../renderer/js/utils/proxy-util');
-
-interface PatchedGlobal extends NodeJS.Global {
-	mainWindowState: windowStateKeeper.State;
-}
-
 import electron, {app, dialog, ipcMain, session} from 'electron';
 import fs from 'fs';
 import path from 'path';
@@ -28,15 +7,16 @@ import windowStateKeeper from 'electron-window-state';
 import * as BadgeSettings from '../renderer/js/pages/preference/badge-settings';
 import * as ConfigUtil from '../renderer/js/utils/config-util';
 import * as ProxyUtil from '../renderer/js/utils/proxy-util';
-import ViewManager from './viewmanager';
 import {sentryInit} from '../renderer/js/utils/sentry-util';
 
 import {appUpdater} from './autoupdater';
 import * as AppMenu from './menu';
 import {_getServerSettings, _saveServerIcon, _isOnline} from './request';
 import {setAutoLaunch} from './startup';
+import ViewManager from './viewmanager';
 
-let mainWindowState: windowStateKeeper.State;
+// eslint-disable-next-line import/no-mutable-exports
+export let mainWindowState: windowStateKeeper.State;
 
 // Prevent window being garbage collected
 // eslint-disable-next-line import/no-mutable-exports
@@ -307,7 +287,7 @@ ${error}`
 	});
 
 	ipcMain.on('fix-bounds', () => {
-		ViewManager.fixBounds();
+		ViewManager.fixBounds(mainWindow);
 	});
 
 	ipcMain.on('update-badge', (_event: Electron.IpcMainEvent, messageCount: number) => {
@@ -328,7 +308,7 @@ ${error}`
 		AppMenu.setMenu(props);
 		const activeTab = props.tabs[props.activeTabIndex];
 		if (activeTab) {
-			mainWindow.setTitle(`Zulip - ${activeTab.props.name}`);
+			mainWindow.setTitle(`Zulip - ${activeTab.name}`);
 		}
 	});
 

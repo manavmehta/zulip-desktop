@@ -3,13 +3,13 @@ import {ipcRenderer, remote} from 'electron';
 import * as ConfigUtil from '../utils/config-util';
 import * as LinkUtil from '../utils/link-util';
 
-import type WebView from './webview';
-
 const {shell, app} = remote;
+
+type WebView = any; // Only to avoid error. Pass viewURL and index instead of WebView
 
 const dingSound = new Audio('../resources/sounds/ding.ogg');
 
-export default function handleExternalLink(this: WebView, event: Electron.NewWindowEvent): void {
+export default function handleExternalLink(this: WebView, event: Electron.NewWindowEvent, index: number): void {
 	event.preventDefault();
 
 	const url = new URL(event.url);

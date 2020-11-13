@@ -7,7 +7,6 @@ import * as Messages from '../../resources/messages';
 
 import FunctionalTab from './components/functional-tab';
 import ServerTab from './components/server-tab';
-import WebView from './components/webview';
 import {feedbackHolder} from './feedback';
 import * as ConfigUtil from './utils/config-util';
 import * as DNDUtil from './utils/dnd-util';
@@ -343,12 +342,12 @@ class ServerManagerView {
 			index,
 			url: server.url,
 			role: 'server',
-			name: CommonUtil.decodeString(server.alias),
+			name: server.alias,
 			nodeIntegration: false,
 			preload: true
 		};
 		ipcRenderer.send('create-view', props);
-		this.loading[server.url] = true;
+		this.loading.add(server.url);
 	}
 
 	initActions(): void {
@@ -451,7 +450,7 @@ class ServerManagerView {
 			url: tabProps.url
 		}));
 		const props = {
-			index: this.functionalTabs[tabProps.name],
+			index: this.functionalTabs.get(tabProps.name),
 			url: tabProps.url,
 			role: 'function',
 			name: tabProps.name,
@@ -531,16 +530,11 @@ class ServerManagerView {
 			}
 		}
 
-		try {
-			this.tabs[index].webview.canGoBackButton();
-		} catch {
-		}
-
 		this.activeTabIndex = index;
 		this.tabs[index].activate();
-
 		ipcRenderer.send('select-view', index);
-		this.showLoading(this.loading.has(this.tabs[this.activeTabIndex].webview.props.url));
+
+		this.showLoading(this.loading.has(this.tabs[this.activeTabIndex].props.url));
 		ipcRenderer.send('call-view-function', 'canGoBackButton');
 
 		ipcRenderer.send('update-menu', {
@@ -617,6 +611,7 @@ class ServerManagerView {
 				tab.updateBadge(count);
 			}
 		}
+
 		if (Number.isInteger(messageCountAll)) {
 			ipcRenderer.send('update-badge', messageCountAll);
 		}
@@ -632,6 +627,7 @@ class ServerManagerView {
 		} else {
 			this.$sidebar.classList.add('sidebar-hide');
 		}
+
 		this.fixBounds();
 	}
 
@@ -650,13 +646,15 @@ class ServerManagerView {
 		const domains = DomainUtil.getDomains();
 		for (const domain of domains) {
 			if (domain.url === this.tabs[tabIndex].props.url) {
-				if (domain.loggedIn && !this.loading[domain.url]) {
+				if (domain.loggedIn && !this.loading.has(domain.url)) {
 					return true;
 				}
-				// match returned false
+				// Match returned false
+
 				return false;
 			}
 		}
+
 		return false;
 	}
 
@@ -713,7 +711,7 @@ class ServerManagerView {
 	}
 
 	registerIpcs(): void {
-		const viewListeners = {
+		const viewListeners: Record<string, string> = {
 			'view-reload': 'reload',
 			back: 'back',
 			focus: 'focus',
@@ -727,34 +725,38 @@ class ServerManagerView {
 		};
 
 		for (const key in viewListeners) {
-			ipcRenderer.on(key, () => {
-				ipcRenderer.send('call-view-function', viewListeners[key]);
-			});
+			if (key) {
+				ipcRenderer.on(key, () => {
+					ipcRenderer.send('call-view-function', viewListeners[key]);
+				});
+			}
 		}
 
-		ipcRenderer.on('permission-request', (
-			event: Event,
-			{webContentsId, origin, permission}: {
-				webContentsId: number | null;
-				origin: string;
-				permission: string;
-			},
-			rendererCallbackId: number
-		) => {
-			const grant = webContentsId === null ?
-				origin === 'null' && permission === 'notifications' :
-				this.tabs.some(
-					({webview}) =>
-						!webview.loading &&
-						webview.$el.getWebContentsId() === webContentsId &&
-						webview.props.hasPermission?.(origin, permission)
-				);
-			console.log(
-				grant ? 'Granted' : 'Denied', 'permissions request for',
-				permission, 'from', origin
-			);
-			ipcRenderer.send('renderer-callback', rendererCallbackId, grant);
-		});
+		// BV TODO: Make this work
+		// ipcRenderer.on('permission-request', (
+		// 	event: Event,
+		// 	{webContentsId, origin, permission}: {
+		// 		webContentsId: number | null;
+		// 		origin: string;
+		// 		permission: string;
+		// 	},
+		// 	rendererCallbackId: number
+		// ) => {
+		// 	const grant = webContentsId === null ?
+		// 		origin === 'null' && permission === 'notifications' :
+		// 		this.tabs.some(
+		// 			({webview}) =>
+		// 				!webview.loading &&
+		// 				webview.$el.getWebContentsId() === webContentsId &&
+		// 				webview.props.hasPermission?.(origin, permission)
+		// 		);
+		// 	console.log(
+		// 		grant ? 'Granted' : 'Denied', 'permissions request for',
+		// 		permission, 'from', origin
+		// 	);
+		// 	ipcRenderer.send('renderer-callback', rendererCallbackId, grant);
+		// });
+
 		ipcRenderer.on('set-logged-in', (event: Event, loggedIn: boolean, index: number) => {
 			const domain = DomainUtil.getDomain(index);
 			domain.loggedIn = loggedIn;
@@ -834,7 +836,7 @@ class ServerManagerView {
 		ipcRenderer.on('update-realm-name', (event: Event, serverURL: string, realmName: string) => {
 			DomainUtil.getDomains().forEach((domain: DomainUtil.ServerConf, index: number) => {
 				if (domain.url.includes(serverURL)) {
-					const serverTabSelector = `.server-tab`;
+					const serverTabSelector = '.server-tab';
 					const serverTabs = document.querySelectorAll(serverTabSelector);
 					serverTabs[index].textContent = realmName;
 					this.tabs[index].props.name = realmName;
@@ -941,30 +943,32 @@ class ServerManagerView {
 			await this.openSettings('Network');
 		});
 
-		ipcRenderer.on('switch-back', (e: Event, state: boolean) => {
-			if (state === true) {
+		ipcRenderer.on('switch-back', (_event: Event, state: boolean) => {
+			if (state) {
 				this.$backButton.classList.remove('disable');
 			} else {
 				this.$backButton.classList.add('disable');
 			}
 		});
 
-		ipcRenderer.on('switch-loading', (e: Event, loading: boolean, url: string) => {
-			if (!loading && this.loading[url]) {
-				this.loading[url] = false;
-			} else if (loading && !this.loading[url]) {
-				this.loading[url] = true;
+		ipcRenderer.on('switch-loading', (_event: Event, loading: boolean, url: string) => {
+			if (!loading && this.loading.has(url)) {
+				this.loading.delete(url);
+			} else if (loading && !this.loading.has(url)) {
+				this.loading.add(url);
 			}
-			this.showLoading(this.loading[this.tabs[this.activeTabIndex].props.url]);
+
+			this.showLoading(this.loading.has(this.tabs[this.activeTabIndex].props.url));
 		});
 
-		ipcRenderer.on('update-badge-count', (e: Event, count: number, url: string) => {
+		ipcRenderer.on('update-badge-count', (_event: Event, count: number, url: string) => {
 			this.badgeCounts[url] = count;
 			this.updateBadge();
 		});
 
-		ipcRenderer.on('handle-link', (e: Event, index: number, url: string) => {
-			handleExternalLink(index, url);
+		ipcRenderer.on('handle-link', (_event: Event, index: number, url: string) => {
+			// Call HandleExternalLink
+			// handleExternalLink(index, url);
 		});
 	}
 }

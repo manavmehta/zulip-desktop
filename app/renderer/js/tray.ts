@@ -210,6 +210,7 @@ function toggleTray(): void {
 
 		ConfigUtil.setConfigItem('trayIcon', true);
 	}
+
 	ipcRenderer.send('forward-view-message', 'toggletray', state);
 }
 

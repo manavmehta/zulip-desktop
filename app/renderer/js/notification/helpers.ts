@@ -70,7 +70,7 @@ const contents = remote.getCurrentWebContents();
 // This function will focus the server that sent
 // the notification. Main function implemented in main.js
 export function focusCurrentServer(): void {
-	currentWindow.webContents.send('focus-view-with-id', webContentsId);
+	currentWindow.webContents.send('focus-view-with-id', contents);
 }
 
 // This function parses the reply from to notification

@@ -15,6 +15,7 @@ export interface ServerConf {
 	url: string;
 	alias?: string;
 	icon?: string;
+	loggedIn?: boolean;
 }
 
 const logger = new Logger({
@@ -80,73 +81,10 @@ export function removeDomain(index: number): boolean {
 		return false;
 	}
 
-<<<<<<< HEAD
 	db.delete(`/domains[${index}]`);
 	reloadDB();
 	return true;
 }
-=======
-	async checkCertError(domain: any, serverConf: any, error: string, silent: boolean): Promise<string | object> {
-		if (silent) {
-			// since getting server settings has already failed
-			return serverConf;
-		} else {
-			// Report error to sentry to get idea of possible certificate errors
-			// users get when adding the servers
-			logger.reportSentry(new Error(error).toString());
-			const certErrorMessage = Messages.certErrorMessage(domain, error);
-			const certErrorDetail = Messages.certErrorDetail();
-
-			const response = await (dialog.showMessageBox({
-				type: 'warning',
-				buttons: ['Yes', 'No'],
-				defaultId: 1,
-				message: certErrorMessage,
-				detail: certErrorDetail
-			}) as any); // TODO: TypeScript - Figure this out
-			if (response === 0) {
-				// set ignoreCerts parameter to true in case user responds with yes
-				serverConf.ignoreCerts = true;
-				try {
-					return await this.getServerSettings(domain, serverConf.ignoreCerts);
-				} catch (_) {
-					if (error === Messages.noOrgsError(domain)) {
-						throw new Error(error);
-					}
-					return serverConf;
-				}
-			} else {
-				throw new Error('Untrusted certificate.');
-			}
-		}
-	}
-
-	// ignoreCerts parameter helps in fetching server icon and
-	// other server details when user chooses to ignore certificate warnings
-	async checkDomain(domain: any, ignoreCerts = false, silent = false): Promise<any> {
-		if (!silent && this.duplicateDomain(domain)) {
-			// Do not check duplicate in silent mode
-			throw new Error('This server has been added.');
-		}
-
-		domain = this.formatUrl(domain);
-
-		const serverConf = {
-			icon: defaultIconUrl,
-			url: domain,
-			alias: domain,
-			loggedIn: false,
-			ignoreCerts
-		};
-
-		try {
-			return await this.getServerSettings(domain, serverConf.ignoreCerts);
-		} catch (err) {
-			// If the domain contains following strings we just bypass the server
-			const whitelistDomains = [
-				'zulipdev.org'
-			];
->>>>>>> BrowserView: Get enabled flag for notifs settings.
 
 // Check if domain is already added
 export function duplicateDomain(domain: string): boolean {

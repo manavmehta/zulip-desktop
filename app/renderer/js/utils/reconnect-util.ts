@@ -15,8 +15,8 @@ export default class ReconnectUtil {
 	alreadyReloaded: boolean;
 	fibonacciBackoff: backoff.Backoff;
 
-	constructor(webview: WebView) {
-		this.url = webview.props.url;
+	constructor(url: string) {
+		this.url = url;
 		this.alreadyReloaded = false;
 		this.clearState();
 	}

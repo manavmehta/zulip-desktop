@@ -10,7 +10,7 @@ export interface TabProps {
 	tabIndex: number;
 	onHover?: () => void;
 	onHoverOut?: () => void;
-	webview: WebView;
+	url: string;
 	materialIcon?: string;
 	onDestroy?: () => void;
 }
@@ -29,9 +29,9 @@ export default class Tab extends BaseComponent {
 		this.$el.addEventListener('mouseout', this.props.onHoverOut);
 	}
 
-	showNetworkError(): void {
-		this.webview.forceLoad();
-	}
+	// X showNetworkError(): void {
+	// X	this.webview.forceLoad();
+	// X }
 
 	activate(): void {
 		this.$el.classList.add('active');
